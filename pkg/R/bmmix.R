@@ -1,8 +1,8 @@
 
-#################
-## mcmcMixGroups
-#################
-mcmcMixGroups <- function(X, y, n=1e5, sample.every=500,
+##########
+## bmmix
+##########
+bmmix <- function(X, y, n=1e5, sample.every=500,
                           phi.move=FALSE, alpha.prior=NULL,
                           move.sd=0.5,
                           file.out="mcmc.txt", quiet=FALSE){
@@ -168,4 +168,4 @@ mcmcMixGroups <- function(X, y, n=1e5, sample.every=500,
 
     return(out)
 
-} # end mcmMixGroups
+} # end bmmix
