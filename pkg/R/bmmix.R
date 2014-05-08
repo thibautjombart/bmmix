@@ -3,19 +3,18 @@
 ## bmmix
 ##########
 bmmix <- function(X, y, n=1e5, sample.every=500,
-                          phi.move=FALSE, alpha.prior=NULL,
-                          move.sd=0.5,
-                          file.out="mcmc.txt", quiet=FALSE){
+                  move.alpha=TRUE, move.phi=FALSE,
+                  alpha.prior=NULL,
+                  sd.alpha=0.1, sd.phi=0.05, move.phi.every=20,
+                  file.out="mcmc.txt", quiet=FALSE){
     ## CHECKS ##
     if(n/sample.every < 10) warning("less than 10 samples are going to be produced")
     X <- as.matrix(X)
     K <- ncol(X)
     N <- nrow(X)
     if(N != length(y)) stop("The number of rows in X does not match the length of y")
-    if(phi.move) stop("phi cannot be moved in this version")
-    ## if(is.null(alpha.prior)){
-    ##     alpha.prior <- rep(1/ncol(X), ncol(X))
-    ## }
+
+
 
 
     ## LIKELIHOOD FUNCTIONS ##
@@ -51,17 +50,20 @@ bmmix <- function(X, y, n=1e5, sample.every=500,
 
 
 
+
     ## POSTERIOR FUNCTIONS ##
     LPost.all <- function(y, X, phi, alpha){
         return(LL.all(y,X, phi, alpha) + LPrior.alpha(alpha))
     }
 
 
+
+
     ## MOVEMENT FUNCTIONS ##
     ## MOVE ALPHA
-    COUNT.ACC <- 0
-    COUNT.REJ <- 0
-    move.alpha <- function(alpha, sigma=move.sd){
+    ALPHA.ACC <- 0
+    ALPHA.REJ <- 0
+    alpha.move <- function(alpha, sigma=sd.alpha){
         ## generate all proposals ##
         newval <- rnorm(n=length(alpha), mean=alpha, sd=sigma)
         newval <- newval/sum(newval)
@@ -69,50 +71,48 @@ bmmix <- function(X, y, n=1e5, sample.every=500,
         if(all(newval>=0 & newval<=1)){
             if((r <- log(runif(1))) <=  (LL.y(y, phi, newval) - LL.y(y, phi, alpha))){
                 alpha <- newval # accept
-                COUNT.ACC <<- COUNT.ACC+1
+                ALPHA.ACC <<- ALPHA.ACC+1
             } else {
-                COUNT.REJ <<- COUNT.REJ+1
+                ALPHA.REJ <<- ALPHA.REJ+1
             }
         } else {
-            COUNT.REJ <<- COUNT.REJ+1
+            ALPHA.REJ <<- ALPHA.REJ+1
         }
-
-
-        ## ## for all alpha values (origins)
-        ## for(i in 1:length(alpha)){
-        ##     if(newval[i]>=0){
-        ##         temp[i] <- newval[i]
-
-        ##         ## Metropolis acceptance rule
-        ##         ## ! assumes flat prior on alpha for now
-        ##         if((r <- log(runif(1))) <=  (LL.y(y, phi, temp) - LL.y(y, phi, alpha))){
-        ##             ## debugging ##
-        ##             ## if(temp[i]<0) {
-        ##             ##     cat("!!accepted a negative alpha!!")
-        ##             ##     cat("\n\nalpha:")
-        ##             ##     print(alpha)
-        ##             ##     cat("\n\ntemp:")
-        ##             ##     print(temp)
-        ##             ##     cat("\n\nr:")
-        ##             ##     print(r)
-        ##             ##     cat("\n\nLL temp:")
-        ##             ##     print(LL.y(y, phi, temp))
-        ##             ##     cat("\n\nLL old:")
-        ##             ##     print(LL.y(y, phi, alpha))
-        ##             ##     return(list(LL.y,y,phi,temp,alpha))
-        ##             ## }
-        ##             alpha[i] <- temp[i] # accept
-        ##             COUNT.ACC <<- COUNT.ACC+1
-        ##         } else {
-        ##             temp[i] <- alpha[i] # reject
-        ##             COUNT.REJ <<- COUNT.REJ+1
-        ##         }
-        ##     }
-        ## }
 
         ## return moved vector
         return(alpha)
     }
+
+
+    ## MOVE PHI
+    PHI.ACC <- 0
+    PHI.REJ <- 0
+    phi.move <- function(phi, sigma=sd.phi){
+        ## select phi moved ##
+        tomove <- sample(1:ncol(phi), 1)
+
+        ## generate all proposals ##
+        newval <- rnorm(n=nrow(phi), mean=phi[,tomove], sd=sigma)
+        newval <- newval/sum(newval)
+        temp <- phi
+        temp[,tomove] <- newval
+
+        if(all(newval>=0 & newval<=1)){
+            if((r <- log(runif(1))) <=  (LL.all(y, X, temp, alpha) - LL.all(y, X, phi, alpha))){
+                phi <- temp # accept
+                PHI.ACC <<- PHI.ACC+1
+            } else {
+                PHI.REJ <<- PHI.REJ+1
+            }
+        } else {
+            PHI.REJ <<- PHI.REJ+1
+        }
+
+        ## return moved vector
+        return(phi)
+    }
+
+
 
 
     ## MAIN MCMC FUNCTION ##
@@ -140,7 +140,11 @@ bmmix <- function(X, y, n=1e5, sample.every=500,
     ## mcmc ##
     for(i in 1:n){
         ## move stuff ##
-        alpha <- move.alpha(alpha)
+        ## move alpha if needed
+        if(move.alpha) alpha <- alpha.move(alpha, sd.alpha)
+
+        ## move phi if needed
+        if(move.phi && (i %% move.phi.every == 0)) phi <- phi.move(phi, sd.phi)
 
         ## if retain this sample ##
         if(i %% sample.every ==0){
@@ -160,10 +164,22 @@ bmmix <- function(X, y, n=1e5, sample.every=500,
 
     ## format using coda ##
     if(!quiet){
-        cat("\nacceptance rate: ", COUNT.ACC/(COUNT.ACC+COUNT.REJ))
-        cat("\naccepted: ", COUNT.ACC)
-        cat("\nreject: ", COUNT.REJ)
-        cat("\n")
+        ## acceptance rates for alpha
+        if(move.alpha){
+            cat("\nacceptance rate for alpha: ", ALPHA.ACC/(ALPHA.ACC+ALPHA.REJ))
+            cat("\naccepted: ", ALPHA.ACC)
+            cat("\nreject: ", ALPHA.REJ)
+            cat("\n")
+        }
+
+        ## acceptance rates for phi
+        if(move.phi){
+            cat("\nacceptance rate for phi: ", PHI.ACC/(PHI.ACC+PHI.REJ))
+            cat("\naccepted: ", PHI.ACC)
+            cat("\nreject: ", PHI.REJ)
+            cat("\n")
+        }
+
     }
 
     return(out)
