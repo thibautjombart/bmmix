@@ -2,10 +2,10 @@
 ##########
 ## bmmix
 ##########
-bmmix <- function(X, y, n=1e5, sample.every=500,
+bmmix <- function(X, y, n=5e4, sample.every=200,
                   move.alpha=TRUE, move.phi=FALSE,
                   alpha.prior=NULL,
-                  sd.alpha=0.1, sd.phi=0.05, move.phi.every=20,
+                  sd.alpha=0.1, sd.phi=0.05, move.phi.every=10,
                   file.out="mcmc.txt", quiet=FALSE){
     ## CHECKS ##
     if(n/sample.every < 10) warning("less than 10 samples are going to be produced")
