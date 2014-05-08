@@ -123,9 +123,23 @@ bmmix <- function(X, y, n=1e5, sample.every=500,
     ## initial phi
     phi <- prop.table(X,2)
 
-    ## add header to the output file
+    ## ADD HEADER TO THE OUTPUT FILE
+    ## basic header
     header <- "step\tpost\tlikelihood\tprior"
-    header <- c(header, paste("alpha", 1:K, sep=".", collapse="\t"))
+
+    ## header for alpha
+    if(move.alpha) header <- c(header, paste("alpha", 1:K, sep=".", collapse="\t"))
+
+    ## header for phi
+    if(move.phi) {
+        annot.phi <- paste("phi",
+                           rownames(phi)[as.vector(row(phi))],
+                           colnames(phi)[as.vector(col(phi))],
+                           sep=".", collapse="\t")
+        header <- c(header, annot.phi)
+    }
+
+    ## collapse everything and write to file
     header <- paste(header, collapse="\t")
     cat(header, file=file.out)
 
@@ -134,7 +148,10 @@ bmmix <- function(X, y, n=1e5, sample.every=500,
     ## temp: c(loglike, logprior)
     temp <- c(LL.all(y, X, phi, alpha), LPrior.alpha(alpha))
     cat("\n", file=file.out, append=TRUE)
-    cat(c(1, sum(temp), temp, alpha/sum(alpha)), sep="\t", append=TRUE, file=file.out)
+    cat(c(1, sum(temp), temp), sep="\t", append=TRUE, file=file.out)
+    if(move.alpha) cat("", alpha/sum(alpha), sep="\t", append=TRUE, file=file.out)
+    if(move.phi) cat("", as.vector(phi), sep="\t", append=TRUE, file=file.out)
+
     if(!quiet) cat("\nStarting MCMC: 1")
 
     ## mcmc ##
@@ -150,7 +167,9 @@ bmmix <- function(X, y, n=1e5, sample.every=500,
         if(i %% sample.every ==0){
             temp <- c(LL.all(y, X, phi, alpha), LPrior.alpha(alpha))
             cat("\n", file=file.out, append=TRUE)
-            cat(c(i, sum(temp), temp, alpha/sum(alpha)), sep="\t", append=TRUE, file=file.out)
+            cat(c(i, sum(temp), temp), sep="\t", append=TRUE, file=file.out)
+            if(move.alpha) cat("", alpha/sum(alpha), sep="\t", append=TRUE, file=file.out)
+            if(move.phi) cat("", as.vector(phi), sep="\t", append=TRUE, file=file.out)
             if(!quiet) cat("..",i)
         }
     }
@@ -159,7 +178,7 @@ bmmix <- function(X, y, n=1e5, sample.every=500,
 
 
     ## re-read output file ##
-    out <- read.table(file.out, header=TRUE, colClasses="numeric")
+    out <- read.table(file.out, header=TRUE, colClasses="numeric", sep="\t")
     out$step <- as.integer(out$step)
 
     ## format using coda ##
