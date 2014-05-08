@@ -88,24 +88,26 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
     PHI.ACC <- 0
     PHI.REJ <- 0
     phi.move <- function(phi, sigma=sd.phi){
-        ## select phi moved ##
-        tomove <- sample(1:ncol(phi), 1)
+        ## ## select phi moved ##
+        ## tomove <- sample(1:ncol(phi), 1)
+        for(tomove in 1:ncol(phi)){
 
-        ## generate all proposals ##
-        newval <- rnorm(n=nrow(phi), mean=phi[,tomove], sd=sigma)
-        newval <- newval/sum(newval)
-        temp <- phi
-        temp[,tomove] <- newval
+            ## generate all proposals ##
+            newval <- rnorm(n=nrow(phi), mean=phi[,tomove], sd=sigma)
+            newval <- newval/sum(newval)
+            temp <- phi
+            temp[,tomove] <- newval
 
-        if(all(newval>=0 & newval<=1)){
-            if((r <- log(runif(1))) <=  (LL.all(y, X, temp, alpha) - LL.all(y, X, phi, alpha))){
-                phi <- temp # accept
-                PHI.ACC <<- PHI.ACC+1
+            if(all(newval>=0 & newval<=1)){
+                if((r <- log(runif(1))) <=  (LL.all(y, X, temp, alpha) - LL.all(y, X, phi, alpha))){
+                    phi <- temp # accept
+                    PHI.ACC <<- PHI.ACC+1
+                } else {
+                    PHI.REJ <<- PHI.REJ+1
+                }
             } else {
                 PHI.REJ <<- PHI.REJ+1
             }
-        } else {
-            PHI.REJ <<- PHI.REJ+1
         }
 
         ## return moved vector
