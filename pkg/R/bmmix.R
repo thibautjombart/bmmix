@@ -17,6 +17,8 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
     K <- ncol(X)
     N <- nrow(X)
     if(N != length(y)) stop("The number of rows in X does not match the length of y")
+    if(model.unsampled && !move.phi) warning("It is strongly recommended to move phi when allowing for unsampled origins; \notherwise all ST frequencies will be equal in the unsampled origin")
+
 
 
     ## LIKELIHOOD FUNCTIONS ##
@@ -142,7 +144,7 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
     header <- "step\tpost\tlikelihood\tprior"
 
     ## header for alpha
-    if(move.alpha) header <- c(header, paste("alpha", 1:K, sep=".", collapse="\t"))
+    if(move.alpha) header <- c(header, paste("alpha", colnames(X), sep=".", collapse="\t"))
 
     ## header for phi
     if(move.phi) {
