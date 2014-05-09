@@ -1,3 +1,6 @@
 
 ## Export all names
 exportPattern("^[^\\.]")
+
+## Imports
+importFrom(utils, "packageDescription")
