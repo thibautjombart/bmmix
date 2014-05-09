@@ -4,17 +4,19 @@
 ##########
 bmmix <- function(X, y, n=5e4, sample.every=200,
                   move.alpha=TRUE, move.phi=FALSE,
-                  alpha.prior=NULL,
                   sd.alpha=0.1, sd.phi=0.05, move.phi.every=10,
+                  model.unsampled=FALSE, prior.unsampled.contrib=0.1,
                   file.out="mcmc.txt", quiet=FALSE){
     ## CHECKS ##
     if(n/sample.every < 10) warning("less than 10 samples are going to be produced")
     X <- as.matrix(X)
+    if(model.unsampled){
+        X <- cbind(X, unsampled=rep(0, nrow(X)))
+        rate.alpha.prior <- 1/prior.unsampled.contrib
+    }
     K <- ncol(X)
     N <- nrow(X)
     if(N != length(y)) stop("The number of rows in X does not match the length of y")
-
-
 
 
     ## LIKELIHOOD FUNCTIONS ##
@@ -44,8 +46,14 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
 
 
     ## PRIOR FUNCTIONS ##
-    LPrior.alpha <- function(alpha){
-        return(0)
+    if(model.unsampled){
+        LPrior.alpha <- function(alpha){
+            return(dexp((alpha/sum(alpha))[K], rate=rate.alpha.prior, log=TRUE))
+        }
+    } else {
+        LPrior.alpha <- function(alpha){
+            return(0)
+        }
     }
 
 
@@ -69,7 +77,8 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
         newval <- newval/sum(newval)
 
         if(all(newval>=0 & newval<=1)){
-            if((r <- log(runif(1))) <=  (LL.y(y, phi, newval) - LL.y(y, phi, alpha))){
+            metro.ratio <- LL.y(y, phi, newval) - LL.y(y, phi, alpha) + LPrior.alpha(newval) - LPrior.alpha(alpha)
+            if((r <- log(runif(1))) <=  metro.ratio){
                 alpha <- newval # accept
                 ALPHA.ACC <<- ALPHA.ACC+1
             } else {
@@ -124,6 +133,9 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
 
     ## initial phi
     phi <- prop.table(X,2)
+    if(model.unsampled){
+        phi[,K] <- rep(1/nrow(X), nrow(X))
+    }
 
     ## ADD HEADER TO THE OUTPUT FILE
     ## basic header
