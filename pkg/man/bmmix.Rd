@@ -136,7 +136,7 @@ ggplot(dat=fig.dat, aes(x=step)) +
 
 ggplot(dat=fig.dat, aes(x=step)) +
    geom_density(aes(x=value, fill=variable),alpha=.2) +
-   labs(title="Densityies of mixture coefficients")
+   labs(title="Densities of mixture coefficients")
 }
 
 
