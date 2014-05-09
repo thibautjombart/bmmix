@@ -1,0 +1,8 @@
+			BMMIX 0.1-0
+NEW FEATURES
+	o first beta release of bmmix - this package is not ready to use yet!
+
+	o the function bmmix implements a Bayesian multinomial mixture
+	model; the initial application is forensic: trying to identify the
+	source(s) of human infections by a bacterium based on MLST data.
+	
