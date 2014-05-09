@@ -2,21 +2,21 @@
 ##########
 ## bmmix
 ##########
-bmmix <- function(X, y, n=5e4, sample.every=200,
+bmmix <- function(x, y, n=5e4, sample.every=200,
                   move.alpha=TRUE, move.phi=FALSE,
                   sd.alpha=0.1, sd.phi=0.05, move.phi.every=10,
                   model.unsampled=FALSE, prior.unsampled.contrib=0.1,
                   file.out="mcmc.txt", quiet=FALSE){
     ## CHECKS ##
     if(n/sample.every < 10) warning("less than 10 samples are going to be produced")
-    X <- as.matrix(X)
+    x <- as.matrix(x)
     if(model.unsampled){
-        X <- cbind(X, unsampled=rep(0, nrow(X)))
+        x <- cbind(x, unsampled=rep(0, nrow(x)))
         rate.alpha.prior <- 1/prior.unsampled.contrib
     }
-    K <- ncol(X)
-    N <- nrow(X)
-    if(N != length(y)) stop("The number of rows in X does not match the length of y")
+    K <- ncol(x)
+    N <- nrow(x)
+    if(N != length(y)) stop("The number of rows in x does not match the length of y")
     if(model.unsampled && !move.phi) warning("It is strongly recommended to move phi when allowing for unsampled origins; \notherwise all ST frequencies will be equal in the unsampled origin")
 
 
@@ -32,18 +32,18 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
     }
 
 
-    ## LIKELIHOOD OF PUTATIVE ORIGIN DATA 'X'
+    ## LIKELIHOOD OF PUTATIVE ORIGIN DATA 'x'
     ## y is a vector of N numbers
     ## phi is a NxK matrix of numbers
     ## alpha is a vector of K mixture coefficients
-    LL.X <- function(X, phi){
-        return(sum(sapply(1:ncol(X), function(i) dmultinom(X[,i], prob=phi[,i], log=TRUE))))
+    LL.x <- function(x, phi){
+        return(sum(sapply(1:ncol(x), function(i) dmultinom(x[,i], prob=phi[,i], log=TRUE))))
     }
 
 
     ## LIKELIHOOD OF ALL DATA ##
-    LL.all <- function(y, X, phi, alpha){
-        return(LL.y(y, phi, alpha) + LL.X(X, phi))
+    LL.all <- function(y, x, phi, alpha){
+        return(LL.y(y, phi, alpha) + LL.x(x, phi))
     }
 
 
@@ -62,8 +62,8 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
 
 
     ## POSTERIOR FUNCTIONS ##
-    LPost.all <- function(y, X, phi, alpha){
-        return(LL.all(y,X, phi, alpha) + LPrior.alpha(alpha))
+    LPost.all <- function(y, x, phi, alpha){
+        return(LL.all(y,x, phi, alpha) + LPrior.alpha(alpha))
     }
 
 
@@ -110,7 +110,7 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
             temp[,tomove] <- newval
 
             if(all(newval>=0 & newval<=1)){
-                if((r <- log(runif(1))) <=  (LL.all(y, X, temp, alpha) - LL.all(y, X, phi, alpha))){
+                if((r <- log(runif(1))) <=  (LL.all(y, x, temp, alpha) - LL.all(y, x, phi, alpha))){
                     phi <- temp # accept
                     PHI.ACC <<- PHI.ACC+1
                 } else {
@@ -134,9 +134,9 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
     alpha <- rep(1,K)
 
     ## initial phi
-    phi <- prop.table(X,2)
+    phi <- prop.table(x,2)
     if(model.unsampled){
-        phi[,K] <- rep(1/nrow(X), nrow(X))
+        phi[,K] <- rep(1/nrow(x), nrow(x))
     }
 
     ## ADD HEADER TO THE OUTPUT FILE
@@ -144,7 +144,7 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
     header <- "step\tpost\tlikelihood\tprior"
 
     ## header for alpha
-    if(move.alpha) header <- c(header, paste("alpha", colnames(X), sep=".", collapse="\t"))
+    if(move.alpha) header <- c(header, paste("alpha", colnames(x), sep=".", collapse="\t"))
 
     ## header for phi
     if(move.phi) {
@@ -162,7 +162,7 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
 
     ## add first line
     ## temp: c(loglike, logprior)
-    temp <- c(LL.all(y, X, phi, alpha), LPrior.alpha(alpha))
+    temp <- c(LL.all(y, x, phi, alpha), LPrior.alpha(alpha))
     cat("\n", file=file.out, append=TRUE)
     cat(c(1, sum(temp), temp), sep="\t", append=TRUE, file=file.out)
     if(move.alpha) cat("", alpha/sum(alpha), sep="\t", append=TRUE, file=file.out)
@@ -181,7 +181,7 @@ bmmix <- function(X, y, n=5e4, sample.every=200,
 
         ## if retain this sample ##
         if(i %% sample.every ==0){
-            temp <- c(LL.all(y, X, phi, alpha), LPrior.alpha(alpha))
+            temp <- c(LL.all(y, x, phi, alpha), LPrior.alpha(alpha))
             cat("\n", file=file.out, append=TRUE)
             cat(c(i, sum(temp), temp), sep="\t", append=TRUE, file=file.out)
             if(move.alpha) cat("", alpha/sum(alpha), sep="\t", append=TRUE, file=file.out)
