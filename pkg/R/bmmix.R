@@ -136,12 +136,18 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     alpha <- rep(1,K)
 
     ## initial phi
-    temp <- x
-    replace.freq <- min.ini.freq*apply(x,2,sum)
-    for(j in 1:ncol(temp)){
-        temp[,j][temp[,j]==0] <- replace.freq[j]
+    phi <- prop.table(x,2)
+    nb.toreplace <- apply(phi,2, function(e) sum(e<NEARZERO))
+    replace.freq <- min.ini.freq/nb.toreplace
+    freq.tosubstract <- 0.01/(nrow(x)-nb.toreplace)
+    for(j in 1:ncol(phi)){
+        ## replace zeros with small freq
+        phi.arezero <- phi[,j] < NEARZERO
+        phi[phi.arezero,j] <- replace.freq[j]
+        phi[!phi.arezero,j] <- phi[!phi.arezero,j] - freq.tosubstract[j]
     }
-    phi <- prop.table(temp,2)
+
+
     if(model.unsampled){
         phi[,K] <- rep(1/nrow(x), nrow(x))
     }
