@@ -246,7 +246,7 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
         }
 
         ## acceptance rates for phi
-        if(move.phi){
+        if(move.phi || model.unsampled){
             cat("\nacceptance rate for phi: ", PHI.ACC/(PHI.ACC+PHI.REJ))
             cat("\naccepted: ", PHI.ACC)
             cat("\nreject: ", PHI.REJ)
