@@ -6,8 +6,10 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
                   move.alpha=TRUE, move.phi=FALSE,
                   sd.alpha=0.1, sd.phi=0.05, move.phi.every=10,
                   model.unsampled=FALSE, prior.unsampled.contrib=0.1,
+                  min.ini.freq <- 0.01,
                   file.out="mcmc.txt", quiet=FALSE){
     ## CHECKS ##
+    NEARZERO <- 1e-20
     if(n/sample.every < 10) warning("less than 10 samples are going to be produced")
     x <- as.matrix(x)
     if(model.unsampled){
@@ -134,7 +136,12 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     alpha <- rep(1,K)
 
     ## initial phi
-    phi <- prop.table(x,2)
+    temp <- x
+    replace.freq <- min.ini.freq*apply(x,2,sum)
+    for(j in 1:ncol(temp)){
+        temp[,j][temp[,j]==0] <- replace.freq[j]
+    }
+    phi <- prop.table(temp,2)
     if(model.unsampled){
         phi[,K] <- rep(1/nrow(x), nrow(x))
     }
@@ -163,6 +170,8 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     ## add first line
     ## temp: c(loglike, logprior)
     temp <- c(LL.all(y, x, phi, alpha), LPrior.alpha(alpha))
+    ## check that initial LL is not -Inf
+    if(!is.finite(temp[1])) warning("Initial likelihood is zero")
     cat("\n", file=file.out, append=TRUE)
     cat(c(1, sum(temp), temp), sep="\t", append=TRUE, file=file.out)
     if(move.alpha) cat("", alpha/sum(alpha), sep="\t", append=TRUE, file=file.out)
