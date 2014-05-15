@@ -6,7 +6,7 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
                   move.alpha=TRUE, move.phi=FALSE,
                   sd.alpha=0.1, sd.phi=0.05, move.phi.every=10,
                   model.unsampled=FALSE, prior.unsampled.contrib=0.1,
-                  min.ini.freq <- 0.01,
+                  min.ini.freq=0.01,
                   file.out="mcmc.txt", quiet=FALSE){
     ## CHECKS ##
     NEARZERO <- 1e-20
@@ -101,9 +101,15 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     PHI.ACC <- 0
     PHI.REJ <- 0
     phi.move <- function(phi, sigma=sd.phi){
-        ## ## select phi moved ##
-        ## tomove <- sample(1:ncol(phi), 1)
-        for(tomove in 1:ncol(phi)){
+        ## check which one must move
+        if(move.phi) {
+            idx.toMove <- 1:ncol(phi)
+        } else if(model.unsampled){
+            idx.toMove <- ncol(phi)
+        } else return(phi)
+
+        ## for all frequencies to move...
+        for(tomove in idx.toMove){
 
             ## generate all proposals ##
             newval <- rnorm(n=nrow(phi), mean=phi[,tomove], sd=sigma)
@@ -166,6 +172,12 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
                            colnames(phi)[as.vector(col(phi))],
                            sep=".", collapse="\t")
         header <- c(header, annot.phi)
+    } else if(model.unsampled){
+        annot.phi <- paste("phi",
+                           rownames(phi)[as.vector(row(phi))],
+                           "unsampled",
+                           sep=".", collapse="\t")
+        header <- c(header, annot.phi)
     }
 
     ## collapse everything and write to file
@@ -176,8 +188,11 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     ## add first line
     ## temp: c(loglike, logprior)
     temp <- c(LL.all(y, x, phi, alpha), LPrior.alpha(alpha))
+
     ## check that initial LL is not -Inf
     if(!is.finite(temp[1])) warning("Initial likelihood is zero")
+
+    ## write to file
     cat("\n", file=file.out, append=TRUE)
     cat(c(1, sum(temp), temp), sep="\t", append=TRUE, file=file.out)
     if(move.alpha) cat("", alpha/sum(alpha), sep="\t", append=TRUE, file=file.out)
@@ -191,8 +206,8 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
         ## move alpha if needed
         if(move.alpha) alpha <- alpha.move(alpha, sd.alpha)
 
-        ## move phi if needed
-        if(move.phi && (i %% move.phi.every == 0)) phi <- phi.move(phi, sd.phi)
+        ## move phi if needed (phi.move makes the necessary moves)
+        if((move.phi|model.unsampled) && (i %% move.phi.every == 0)) phi <- phi.move(phi, sd.phi)
 
         ## if retain this sample ##
         if(i %% sample.every ==0){
@@ -200,7 +215,11 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
             cat("\n", file=file.out, append=TRUE)
             cat(c(i, sum(temp), temp), sep="\t", append=TRUE, file=file.out)
             if(move.alpha) cat("", alpha/sum(alpha), sep="\t", append=TRUE, file=file.out)
-            if(move.phi) cat("", as.vector(phi), sep="\t", append=TRUE, file=file.out)
+            if(move.phi) {
+                cat("", as.vector(phi), sep="\t", append=TRUE, file=file.out)
+            } else if(model.unsampled){
+                cat("", as.vector(phi[,ncol(phi)]), sep="\t", append=TRUE, file=file.out)
+            }
             if(!quiet) cat("..",i)
         }
     }
