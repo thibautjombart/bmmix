@@ -19,8 +19,6 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     K <- ncol(x)
     N <- nrow(x)
     if(N != length(y)) stop("The number of rows in x does not match the length of y")
-    if(model.unsampled && !move.phi) warning("It is strongly recommended to move phi when allowing for unsampled origins; \notherwise all ST frequencies will be equal in the unsampled origin")
-
 
 
     ## LIKELIHOOD FUNCTIONS ##
@@ -103,9 +101,9 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     phi.move <- function(phi, sigma=sd.phi){
         ## check which one must move
         if(move.phi) {
-            idx.toMove <- 1:ncol(phi)
+            idx.toMove <- 1:K
         } else if(model.unsampled){
-            idx.toMove <- ncol(phi)
+            idx.toMove <- K
         } else return(phi)
 
         ## for all frequencies to move...
@@ -142,7 +140,13 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     alpha <- rep(1,K)
 
     ## initial phi
-    phi <- prop.table(x,2)
+    if(model.unsampled){
+        phi <- cbind(prop.table(x[,-K],2), "unsampled"=rep(1/nrow(x), nrow(x)))
+    } else {
+        phi <- prop.table(x,2)
+    }
+
+    ## handle 'zero' replacement
     nb.toreplace <- apply(phi,2, function(e) sum(e<NEARZERO))
     replace.freq <- min.ini.freq/nb.toreplace
     freq.tosubstract <- 0.01/(nrow(x)-nb.toreplace)
@@ -153,10 +157,6 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
         phi[!phi.arezero,j] <- phi[!phi.arezero,j] - freq.tosubstract[j]
     }
 
-
-    if(model.unsampled){
-        phi[,K] <- rep(1/nrow(x), nrow(x))
-    }
 
     ## ADD HEADER TO THE OUTPUT FILE
     ## basic header
@@ -174,7 +174,7 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
         header <- c(header, annot.phi)
     } else if(model.unsampled){
         annot.phi <- paste("phi",
-                           rownames(phi)[as.vector(row(phi))],
+                           rownames(phi),
                            "unsampled",
                            sep=".", collapse="\t")
         header <- c(header, annot.phi)
@@ -196,7 +196,11 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     cat("\n", file=file.out, append=TRUE)
     cat(c(1, sum(temp), temp), sep="\t", append=TRUE, file=file.out)
     if(move.alpha) cat("", alpha/sum(alpha), sep="\t", append=TRUE, file=file.out)
-    if(move.phi) cat("", as.vector(phi), sep="\t", append=TRUE, file=file.out)
+    if(move.phi){
+        cat("", as.vector(phi), sep="\t", append=TRUE, file=file.out)
+    } else if(model.unsampled){
+        cat("", as.vector(phi[,K]), sep="\t", append=TRUE, file=file.out)
+    }
 
     if(!quiet) cat("\nStarting MCMC: 1")
 
@@ -218,7 +222,7 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
             if(move.phi) {
                 cat("", as.vector(phi), sep="\t", append=TRUE, file=file.out)
             } else if(model.unsampled){
-                cat("", as.vector(phi[,ncol(phi)]), sep="\t", append=TRUE, file=file.out)
+                cat("", as.vector(phi[,K]), sep="\t", append=TRUE, file=file.out)
             }
             if(!quiet) cat("..",i)
         }
