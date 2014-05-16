@@ -1,3 +1,15 @@
+			BMMIX 0.1-1
+NEW FEATURES
+	o the model can now move unsampled frequencies independently from
+	the sampled groups.
+
+	o minimum non-zero frequencies allowed in sampled groups when not
+	moving the frequencies - avoiding -Inf log-likelihoods when groups
+	in the response are not in the candidate origins.
+
+
+
+
 			BMMIX 0.1-0
 NEW FEATURES
 	o first beta release of bmmix - this package is not ready to use yet!
@@ -5,4 +17,4 @@ NEW FEATURES
 	o the function bmmix implements a Bayesian multinomial mixture
 	model; the initial application is forensic: trying to identify the
 	source(s) of human infections by a bacterium based on MLST data.
-	
+
