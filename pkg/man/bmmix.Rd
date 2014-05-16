@@ -10,7 +10,7 @@ bmmix(x, y, n=5e4, sample.every=200,
       move.alpha=TRUE, move.phi=FALSE,
       sd.alpha=0.1, sd.phi=0.05, move.phi.every=10,
       model.unsampled=FALSE, prior.unsampled.contrib=0.1,
-      file.out="mcmc.txt", quiet=FALSE)
+      min.ini.freq=0.01, file.out="mcmc.txt", quiet=FALSE)
 }
 \arguments{
   \item{x}{a matrix containing multinomial data in columns used to
@@ -47,6 +47,9 @@ bmmix(x, y, n=5e4, sample.every=200,
   \item{prior.unsampled.contrib}{the mean of the exponential
     distribution used as prior for the contribution of the unsampled
     origin in the mixture; all other origins have flat priors.}
+
+  \item{min.ini.freq}{the default minimum frequency of unobserved items
+    in \code{x} used for the initial frequency estimate.}
   
   \item{file.out}{the name of the file used to store the outputs.}
   
@@ -62,7 +65,7 @@ bmmix(x, y, n=5e4, sample.every=200,
   Thibaut Jombart \email{t.jombart@imperial.ac.uk}
 }
 \details{
-  There are essentially 3 variants of the model implemented by
+  There are essentially 4 variants of the model implemented by
   \code{bmmix}:
   \itemize{
     \item{estimate mixture only (default)}{only the mixture coefficients
@@ -75,7 +78,15 @@ bmmix(x, y, n=5e4, sample.every=200,
       and frequencies for each group and origin are estimated; this
       model has (N+1)K parameters (N being the number of rows in 'x');
       to use this model, specify \code{move.phi=TRUE}.}
-    
+
+    \item{estimate mixture, allowing unsampled origin}{mixture
+      coefficients are estimated with an additional 'unsampled' origin
+      whose frequencies are estimated; this model has K+N+1 + parameters
+      (N being the number of rows in 'x'); to use this model, specify
+      \code{move.phi=FALSE,model.unsampled=TRUE}; this is the only
+      practical model allowing unsampled origin for medium-sized or
+      large datasets..}
+
     \item{estimate mixture, frequencies, and allow unsampled
       origin}{this is the most complex model; in addition to the
       previous one, an unsampled origin is allowed, and its frequencies
@@ -84,7 +95,9 @@ bmmix(x, y, n=5e4, sample.every=200,
       \code{model.unsampled=TRUE}; note that if frequencies are not
       estimated (\code{move.phi=FALSE}), the frequencies in the
       unsampled origin will be fixed to their initial value in which all
-      groups have the same frequency.}
+      groups have the same frequency; this model quickly becomes hard to
+      fit for medium-sized to large datasets.}
+
   }
 }
 \examples{
