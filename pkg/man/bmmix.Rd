@@ -57,9 +57,10 @@ bmmix(x, y, n=5e4, sample.every=200,
     hidden.}
 }
 \value{
-  A data.frame containing the MCMC outputs: step, log-posterior, log-
-  likelihood, log-prior, alpha values (mixture coefficients), and
-  optionally frequencies for each group and origin (phi).
+  A data.frame with class 'bmmix', containing the MCMC outputs: step,
+  log-posterior, log- likelihood, log-prior, alpha values (mixture
+  coefficients), and optionally frequencies for each group and origin
+  (phi).
 }
 \author{
   Thibaut Jombart \email{t.jombart@imperial.ac.uk}
