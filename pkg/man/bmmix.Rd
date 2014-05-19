@@ -137,6 +137,7 @@ head(res)
 ## VISUALIZE RESULTS ##
 if(require("ggplot2") && require("reshape2")){
 
+## manually ##
 ## chech log-posterior
 ggplot(dat=res) + geom_line(aes(x=step, y=post)) +
    labs(title="Trace of log-posterior values")
@@ -148,9 +149,17 @@ ggplot(dat=fig.dat, aes(x=step)) +
    geom_line(aes(y=value, colour=variable)) +
    labs(title="Trace of mixture coefficients")
 
-ggplot(dat=fig.dat, aes(x=step)) +
-   geom_density(aes(x=value, fill=variable),alpha=.2) +
-   labs(title="Densities of mixture coefficients")
+
+## with process.bmmix ##
+## mixture coefficients
+temp <- process.bmmix(res, "alpha")
+names(temp)
+temp$alpha # values 
+temp$trace # graphics: trace
+temp$hist # graphics: histograms
+temp$dens # graphics: densities
+temp$violin # graphics: violinplot
+
 }
 
 

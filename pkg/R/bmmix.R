@@ -256,7 +256,7 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     }
 
 
-    class(out) <- "bmmix"
+    class(out) <- c("data.frame", "bmmix")
     return(out)
 
 } # end bmmix

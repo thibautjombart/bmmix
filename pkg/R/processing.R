@@ -14,10 +14,9 @@ process.bmmix <- function(x, what="post", burnin=1e4,
     out <- list(data.frame(step=x$step, x[,toKeep,drop=FALSE]))
     names(out) <- what
 
-
     ## GENERATE PLOTS ##
     if(ggplot){
-       if(!require(ggplot2) | !require(reshape2)) stop("ggplot2 and reshape2 are needed.")
+       ## if(!require(ggplot2) | !require(reshape2)) stop("ggplot2 and reshape2 are needed.")
 
        ## MORE THAN ONE VARIABLE TO PLOT
        if(ncol(out[[1]])>2){

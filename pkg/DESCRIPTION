@@ -1,11 +1,10 @@
 Package: bmmix
-Version: 0.1-1
-Date: 2014/05/15
+Version: 0.1-2
+Date: 2014/05/19
 Title: Bayesian multinomial mixture
 Author:  Thibaut Jombart <t.jombart@imperial.ac.uk>
 Maintainer: Thibaut Jombart <t.jombart@imperial.ac.uk>
-Suggests: ggplot2, reshape2
 Depends: R (>= 3.0.0)
-Imports: utils
+Imports: utils, ggplot2, reshape2
 Description: Bayesian multinomial mixture model 
 License: GPL (>=2)

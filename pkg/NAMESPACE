@@ -1,6 +1,14 @@
 
-## Export all names
+## EXPORT ALL NAMES
 exportPattern("^[^\\.]")
 
-## Imports
+## IMPORTS
+## utils
 importFrom(utils, "packageDescription")
+
+## reshape2
+importFrom(reshape2, "melt")
+
+## ggplot2
+importFrom(ggplot2, "ggplot", "aes", "aes_string", "labs", "geom_density",
+           "geom_point", "geom_line", "geom_histogram", "geom_violin")
