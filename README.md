@@ -3,3 +3,4 @@
 # bmmix      
 
 Bayesian multinomial mixture model
+
