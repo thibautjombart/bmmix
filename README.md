@@ -4,3 +4,14 @@
 
 Bayesian multinomial mixture model
 
+
+To install the development version of *bmmix*:
+```r
+install_github("thibautjombart/bmmix")
+```
+To test it:
+```r
+library(bmmix)
+example(bmmix)
+```
+
