@@ -1,3 +1,5 @@
+#'
+#' @importFrom utils packageDescription
 .onAttach <- function(libname, pkgname){
     pkg.version <- packageDescription("bmmix", fields = "Version")
     startup.txt <- paste("\n   === bmmix", pkg.version, "is loaded ===\n")

@@ -1,19 +1,22 @@
-## Extract results and make graphics from bmmix outputs
-##
-## This function and model are under development. Do not use them, contact the
-## author if interested.
-##
-##
-## @aliases process.bmmix
-## @param x a data.frame output by \code{bmmix}.
-## @param what a character string indicating which result is seeked, matched
-## against the names of the columns of \code{x}.
-## @param burnin an integer indicating the burnin, i.e. the number of MCMC
-## iterations to be discarded.
-## @param ggplot a logical indicating whether graphics using \code{ggplot2}
-## should be returned.
-## @return A list containing processed results, and optionally ggplot graphics.
-## @author Thibaut Jombart \email{t.jombart@@imperial.ac.uk}
+#' Extract results and make graphics from bmmix outputs
+#'
+#' This function and model are under development. Do not use them, contact the
+#' author if interested.
+#'
+#'
+#' @aliases process.bmmix
+#' @param x a data.frame output by \code{bmmix}.
+#' @param what a character string indicating which result is seeked, matched
+#' against the names of the columns of \code{x}.
+#' @param burnin an integer indicating the burnin, i.e. the number of MCMC
+#' iterations to be discarded.
+#' @param ggplot a logical indicating whether graphics using \code{ggplot2}
+#' should be returned.
+#' @return A list containing processed results, and optionally ggplot graphics.
+#' @author Thibaut Jombart \email{t.jombart@@imperial.ac.uk}
+#' @import ggplot2
+#' @import reshape2
+#' @export process.bmmix
 
 
 #############

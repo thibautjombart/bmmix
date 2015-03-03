@@ -65,9 +65,11 @@
 #' log-posterior, log- likelihood, log-prior, alpha values (mixture
 #' coefficients), and optionally frequencies for each group and origin (phi).
 #'
-#' @import gtools
+#' @importFrom gtools rdirichlet ddirichlet
 #'
 #' @author Thibaut Jombart \email{t.jombart@@imperial.ac.uk}
+#'
+#' @export bmmix
 #'
 #' @examples
 #'
@@ -242,13 +244,17 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     ALPHA.REJ <- 0
     SCALE.ALPHA <- 10
     alpha.move <- function(alpha, sigma=sd.alpha){
-        ## generate all proposals ##
-        ## newval <- rnorm(n=length(alpha), mean=alpha, sd=sigma)
-        ## newval <- newval/sum(newval)
+        ## propose new vector  ##
         newval <- as.vector(rdirichlet(1, alpha*SCALE.ALPHA))
 
+        ## correction factor for MH ##
+        ## LL.corr = log(p(new->old)) - log(p(old->new))
+        LL.correc <- log(ddirichlet(alpha, newval*SCALE.ALPHA)) - log(ddirichlet(newval, alpha*SCALE.ALPHA))
+
         if(all(newval>=0 & newval<=1)){
-            metro.ratio <- LL.y(y, phi, newval) - LL.y(y, phi, alpha) + LPrior.alpha(newval) - LPrior.alpha(alpha)
+            metro.ratio <- LL.y(y, phi, newval) - LL.y(y, phi, alpha) +
+                LPrior.alpha(newval) - LPrior.alpha(alpha) +
+                    LL.correc
             if((r <- log(runif(1))) <=  metro.ratio){
                 alpha <- newval # accept
                 ALPHA.ACC <<- ALPHA.ACC+1
@@ -285,6 +291,10 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
             newval <- as.vector(rdirichlet(1, phi[,tomove]*SCALE.PHI))
             newphi <- phi
             newphi[,tomove] <- newval
+
+            ## correction factor for MH ##
+            ## LL.corr = log(p(new->old)) - log(p(old->new))
+            LL.correc <- log(ddirichlet(phi[,tomove], newval*SCALE.PHI)) - log(ddirichlet(newval, phi[,tomove]*SCALE.PHI))
 
             if(all(newval>=0 & newval<=1)){
                 if((r <- log(runif(1))) <=  (LL.all(y, x, newphi, alpha) - LL.all(y, x, phi, alpha))){
