@@ -67,9 +67,9 @@
 #'
 #' @importFrom gtools rdirichlet ddirichlet
 #'
-#' @author Thibaut Jombart \email{t.jombart@@imperial.ac.uk}
-#'
 #' @export bmmix
+#'
+#' @author Thibaut Jombart \email{t.jombart@@imperial.ac.uk}
 #'
 #' @examples
 #'
@@ -318,7 +318,7 @@ bmmix <- function(x, y, n=5e4, sample.every=200,
     ## MAIN MCMC FUNCTION ##
     ## INITIALIZE MCMC
     ## initial alpha
-    alpha <- rep(1,K)
+    alpha <- rep(1/K, K)
 
     ## initial phi
     if(model.unsampled){
